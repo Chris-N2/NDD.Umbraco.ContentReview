@@ -1,0 +1,112 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <Title>NDD.Umbraco.ContentReview — backoffice</Title>
+    <Description>The NDD.Umbraco.ContentReview backoffice: Lit and Umbraco UI Library extensions for managing content reviews, plus the Management API behind them. Part of NDD.Umbraco.ContentReview; install the NDD.Umbraco.ContentReview package rather than this one.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Api.Management" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" />
+    <!-- Security pin, see Directory.Packages.props -->
+    <PackageReference Include="MessagePack" />
+  </ItemGroup>
+
+  <!-- An ASP.NET Core library (Management API controllers), installed only into Umbraco sites -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NDD.Umbraco.ContentReview.Core\NDD.Umbraco.ContentReview.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NDD.Umbraco.ContentReview.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The client's sources are not package content; only its build output in wwwroot is -->
+    <Content Remove="Client\**" />
+    <None Include="Client\public\umbraco-package.json" Pack="false" />
+  </ItemGroup>
+
+  <!--
+    ==========================================================================================
+    Building the backoffice client is part of building this project.
+    ==========================================================================================
+
+    wwwroot/App_Plugins/ is gitignored, so on a clean clone it does not exist. Without these
+    targets `dotnet pack` builds a Backoffice package with no client in it and reports success:
+    the site gets the Management API and no backoffice extensions, with no error anywhere.
+    (Learned the hard way in uBookIt.)
+
+    Inputs/Outputs make the client build a no-op once the bundle is current. `npm ci` runs only
+    when node_modules is absent. Set ContentReviewBuildClient=false on a host without Node.
+  -->
+  <PropertyGroup>
+    <ContentReviewClientDir>$(MSBuildThisFileDirectory)Client</ContentReviewClientDir>
+    <ContentReviewClientOutputDir>$(MSBuildThisFileDirectory)wwwroot\App_Plugins\NDDContentReview</ContentReviewClientOutputDir>
+    <ContentReviewClientOutput>$(ContentReviewClientOutputDir)\ndd-content-review.js</ContentReviewClientOutput>
+    <ContentReviewBuildClient Condition="'$(ContentReviewBuildClient)' == ''">true</ContentReviewBuildClient>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ContentReviewClientInput Include="$(ContentReviewClientDir)\src\**\*" />
+    <ContentReviewClientInput Include="$(ContentReviewClientDir)\public\**\*" />
+    <ContentReviewClientInput Include="$(ContentReviewClientDir)\package.json;$(ContentReviewClientDir)\vite.config.ts;$(ContentReviewClientDir)\tsconfig.json" />
+  </ItemGroup>
+
+  <Target Name="ContentReviewBuildClient"
+          Condition="'$(ContentReviewBuildClient)' == 'true'"
+          Inputs="@(ContentReviewClientInput)"
+          Outputs="$(ContentReviewClientOutput)">
+    <Exec Command="npm ci" WorkingDirectory="$(ContentReviewClientDir)" Condition="!Exists('$(ContentReviewClientDir)\node_modules')" />
+    <Exec Command="npm run build" WorkingDirectory="$(ContentReviewClientDir)" />
+  </Target>
+
+  <!--
+    The version shown in the backoffice Packages screen is whatever the manifest says, so the
+    build stamps it from $(Version). Not incremental on purpose: Version can change without any
+    client input changing. Runs after the client build because vite's emptyOutDir wipes the
+    folder first. Skipped only when the client is neither built nor present (a host without Node).
+
+    The Error matters: a string replacement that stops matching does not fail, it silently does
+    nothing, and doing nothing here ships "0.0.0".
+  -->
+  <Target Name="ContentReviewStampManifestVersion"
+          Condition="'$(ContentReviewBuildClient)' == 'true' or Exists('$(ContentReviewClientOutputDir)')"
+          DependsOnTargets="ContentReviewBuildClient">
+    <PropertyGroup>
+      <_ContentReviewManifestSource>$(ContentReviewClientDir)\public\umbraco-package.json</_ContentReviewManifestSource>
+      <_ContentReviewManifestTarget>$(ContentReviewClientOutputDir)\umbraco-package.json</_ContentReviewManifestTarget>
+      <_ContentReviewManifestText>$([System.IO.File]::ReadAllText('$(_ContentReviewManifestSource)').Replace('"version": "0.0.0"', '"version": "$(Version)"'))</_ContentReviewManifestText>
+    </PropertyGroup>
+
+    <Error Condition="!$(_ContentReviewManifestText.Contains('&quot;version&quot;: &quot;$(Version)&quot;'))"
+           Text="umbraco-package.json version was not stamped: expected to replace the literal &quot;version&quot;: &quot;0.0.0&quot; in $(_ContentReviewManifestSource), but it is not there. The backoffice Packages screen would show a version nobody released." />
+
+    <MakeDir Directories="$(ContentReviewClientOutputDir)" />
+    <!--
+      Lines is an item list, but ';' and '%XX' in the manifest survive intact: MSBuild escapes the
+      value a property function (ReadAllText) returns. BackofficeBuildTests pins this down with a
+      manifest containing both, so don't add an Escape here; it isn't needed.
+    -->
+    <WriteLinesToFile File="$(_ContentReviewManifestTarget)" Lines="$(_ContentReviewManifestText)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <!--
+    Static web assets are discovered from @(Content), and wwwroot\** is globbed at EVALUATION,
+    before any target runs. On a clean clone wwwroot does not exist then, so a client built
+    during the build would be invisible to discovery and missing from the package. Add the
+    freshly built files explicitly; Exclude stops ones evaluation already found being added twice.
+  -->
+  <Target Name="ContentReviewIncludeClientAssets"
+          DependsOnTargets="ContentReviewStampManifestVersion"
+          BeforeTargets="ResolveProjectStaticWebAssets;AssignTargetPaths">
+    <ItemGroup>
+      <Content Include="wwwroot\**\*" Exclude="@(Content)" />
+    </ItemGroup>
+  </Target>
+</Project>

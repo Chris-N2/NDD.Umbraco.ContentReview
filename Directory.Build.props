@@ -1,0 +1,47 @@
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Warnings are errors in CI; locally they stay warnings. `CI=true dotnet build` reproduces CI. -->
+    <TreatWarningsAsErrors Condition="'$(CI)' == 'true' or '$(TF_BUILD)' == 'true'">true</TreatWarningsAsErrors>
+    <!--
+      Except NuGet vulnerability advisories (NU1901-NU1904). An advisory is published against a
+      package, not introduced by a commit, so as an error it would fail CI on code nobody touched.
+      They stay visible as warnings.
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <!-- Package metadata, set once for every package so versions cannot drift apart. -->
+  <PropertyGroup>
+    <!-- The major tracks the Umbraco major this package targets. -->
+    <Version>17.0.0-alpha.1</Version>
+
+    <Authors>Norwood Design &amp; Development Ltd.</Authors>
+    <Company>Norwood Design &amp; Development Ltd.</Company>
+    <Product>NDD.Umbraco.ContentReview</Product>
+    <Copyright>Copyright © Norwood Design &amp; Development Ltd.</Copyright>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <!-- No umbraco-marketplace tag here: only the aggregate package appends it for itself. -->
+    <PackageTags>umbraco;content-review;review-dates;reminders;accessibility</PackageTags>
+
+    <!--
+      No PackageProjectUrl / RepositoryUrl yet: the repository's public home is undecided, and
+      nuget.org metadata is frozen at push. Added by the change that sets up publishing.
+    -->
+
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <!-- One README and one icon in every package; not attached to non-packable projects. -->
+  <ItemGroup Condition="'$(IsPackable)' != 'false' AND Exists('$(MSBuildThisFileDirectory)README.md')">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsPackable)' != 'false' AND Exists('$(MSBuildThisFileDirectory)assets\icon.png')">
+    <None Include="$(MSBuildThisFileDirectory)assets\icon.png" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
+</Project>

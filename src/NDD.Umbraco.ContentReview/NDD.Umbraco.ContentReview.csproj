@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    ==========================================================================================
+    The package a site installs. It contains no code.
+    ==========================================================================================
+    It exists so that "install these packages" is one package: forgetting one library fails
+    silently. It deliberately does NOT reference NDD.Umbraco.ContentReview.Automate, so a site
+    without Umbraco Automate never downloads it (CLAUDE.md invariant 3). The test suite checks
+    that this reaches every packable library except that one.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Title>NDD.Umbraco.ContentReview</Title>
+    <!-- The Umbraco major is derived from the package version, never written in words -->
+    <ContentReviewUmbracoMajor>$(Version.Substring(0, $(Version.IndexOf('.'))))</ContentReviewUmbracoMajor>
+    <Description>Review dates and reminders for Umbraco $(ContentReviewUmbracoMajor) content: set a review date and an owner on a page or section, and the owner is reminded when it falls due. Install this package. For Umbraco Automate triggers, also install NDD.Umbraco.ContentReview.Automate.</Description>
+    <!-- Only this package is listed on the Umbraco Marketplace; the libraries alone are incomplete -->
+    <PackageTags>$(PackageTags);umbraco-marketplace</PackageTags>
+    <!-- Nothing to ship: this package names its dependencies. NU5128 is the warning for that shape. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeSymbols>false</IncludeSymbols>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <!-- Installed only into Umbraco sites, which are ASP.NET Core applications. A framework reference
+       is not inherited through a project reference for package pruning, so without this the
+       System.Security.Cryptography.Xml advisories appear here although every site runs the
+       framework's copy. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Backoffice brings Core with it -->
+    <ProjectReference Include="..\NDD.Umbraco.ContentReview.Backoffice\NDD.Umbraco.ContentReview.Backoffice.csproj" />
+  </ItemGroup>
+</Project>

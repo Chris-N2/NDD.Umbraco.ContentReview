@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/NDD.Umbraco.ContentReview/NDD.Umbraco.ContentReview.csproj" />
+    <Project Path="src/NDD.Umbraco.ContentReview.Automate/NDD.Umbraco.ContentReview.Automate.csproj" />
+    <Project Path="src/NDD.Umbraco.ContentReview.Backoffice/NDD.Umbraco.ContentReview.Backoffice.csproj" />
+    <Project Path="src/NDD.Umbraco.ContentReview.Core/NDD.Umbraco.ContentReview.Core.csproj" />
+    <Project Path="src/NDD.Umbraco.ContentReview.TestSite/NDD.Umbraco.ContentReview.TestSite.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NDD.Umbraco.ContentReview.Tests/NDD.Umbraco.ContentReview.Tests.csproj" />
+  </Folder>
+</Solution>

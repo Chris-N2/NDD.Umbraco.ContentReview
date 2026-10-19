@@ -1,0 +1,32 @@
+schema: spec-driven
+
+# Project context shown to AI when creating artifacts.
+context: |
+  NDD.Umbraco.ContentReview (product name and NuGet package ID): free, open-source
+  Umbraco package that lets editors set a review date and an owner on a
+  content node (page or folder) and notifies the owner when the review falls
+  due. Target users: universities, councils and other public-sector sites
+  that must keep pages current (accessibility statements especially). Also
+  keeps a general "remind me" item type for personal reminders.
+  Tech stack: .NET 10 / Umbraco.Cms 17.x LTS (pinned below 18), Lit +
+  @umbraco-cms/backoffice (uui-*) + TypeScript + Vite backoffice client,
+  xunit tests. Central package management in root Directory.Packages.props.
+  Hard invariants (from CLAUDE.md, and a violation is an automatic reject):
+  review dates, owners and notifications only, with no approval workflow,
+  publish gating or sign-off chains (keeps clear of the paid Umbraco
+  Workflow add-on); Umbraco Automate integration lives in its own optional
+  package, so the core package never references Umbraco Automate; backoffice
+  is native Umbraco (no third-party widget frameworks).
+  Conventions: nullable enabled everywhere, warnings are errors in CI,
+  Management API endpoints require backoffice authorization policies, schema
+  migrations are additive, no personal data (owner emails etc.) in logs or
+  test fixtures.
+
+# Per-artifact rules
+rules:
+  proposal:
+    - Always include a "Non-goals" section
+    - Any breaking change to public API surface or destructive schema change must be called out explicitly
+    - State how the change stays inside the review-dates-only scope (no approval workflow)
+  specs:
+    - New third-party dependencies must be named explicitly with their license

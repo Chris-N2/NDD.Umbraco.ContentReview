@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Title>NDD.Umbraco.ContentReview — Umbraco Automate integration</Title>
+    <Description>Makes NDD.Umbraco.ContentReview events available to Umbraco Automate, so a due content review can start an automation. Optional: install it alongside NDD.Umbraco.ContentReview on sites that use Umbraco Automate.</Description>
+  </PropertyGroup>
+
+  <!--
+    The ONLY shipped project allowed to reference Umbraco Automate (CLAUDE.md invariant 3).
+    The test suite fails if any other shipped project reaches an Umbraco.Automate* package.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Automate.Core" />
+    <!-- Security pins, see Directory.Packages.props -->
+    <PackageReference Include="MessagePack" />
+    <PackageReference Include="OpenTelemetry.Api" />
+  </ItemGroup>
+
+  <!-- Installed only into Umbraco sites, which are ASP.NET Core applications. Declaring the shared
+       framework lets the SDK prune packages it supplies (System.Security.Cryptography.Xml), so a
+       site runs the framework's copy, fixed by .NET runtime updates. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NDD.Umbraco.ContentReview.Core\NDD.Umbraco.ContentReview.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NDD.Umbraco.ContentReview.Tests" />
+  </ItemGroup>
+</Project>

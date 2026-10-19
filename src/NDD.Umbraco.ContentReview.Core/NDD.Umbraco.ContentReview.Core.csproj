@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Title>NDD.Umbraco.ContentReview — core</Title>
+    <Description>The domain and storage behind NDD.Umbraco.ContentReview: review dates, owners and reminders for Umbraco content. Part of NDD.Umbraco.ContentReview; install the NDD.Umbraco.ContentReview package rather than this one.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Core" />
+    <PackageReference Include="Umbraco.Cms.Infrastructure" />
+    <!-- Security pin, see Directory.Packages.props -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NDD.Umbraco.ContentReview.Tests" />
+  </ItemGroup>
+</Project>

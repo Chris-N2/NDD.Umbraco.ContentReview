@@ -1,0 +1,63 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Ranges, so a site's own Umbraco 17.x patch version wins over ours -->
+    <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Umbraco 17 (LTS): keep every Umbraco.Cms.* package on the same range, never 18 -->
+    <PackageVersion Include="Umbraco.Cms" Version="[17.7.1,18.0.0)" />
+    <PackageVersion Include="Umbraco.Cms.Core" Version="[17.7.1,18.0.0)" />
+    <PackageVersion Include="Umbraco.Cms.Infrastructure" Version="[17.7.1,18.0.0)" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="[17.7.1,18.0.0)" />
+    <PackageVersion Include="Umbraco.Cms.Web.Common" Version="[17.7.1,18.0.0)" />
+    <PackageVersion Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="[17.7.1,18.0.0)" />
+    <PackageVersion Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Umbraco Automate (MIT). Only NDD.Umbraco.ContentReview.Automate and the TestSite may
+      reference these; the test suite enforces it. 17.x targets Umbraco 17; 18.x targets 18.
+    -->
+    <PackageVersion Include="Umbraco.Automate" Version="[17.5.1,18.0.0)" />
+    <PackageVersion Include="Umbraco.Automate.Core" Version="[17.5.1,18.0.0)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- SECURITY PIN, not a feature. GHSA-846f-f764-76mx and GHSA-2fmv-rv2c-59x7 (published
+         2026-10-13) against System.Security.Cryptography.Pkcs, fixed in 10.0.13. Pkcs reaches the
+         shipped packages transitively through Umbraco 17.7.1, the SDK does not prune it, and no
+         Umbraco release yet depends on a fixed version. Core references the fix directly; every
+         other shipped package reaches it through Core.
+         Direct references, NOT CentralPackageTransitivePinningEnabled: that would pin every entry
+         here wherever it is reached and declare it in each nuspec.
+         EXIT: remove this, and the reference to it, when the Umbraco floor is raised to a release
+         whose own graph resolves 10.0.13 or later. -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+
+    <!-- SECURITY PIN, not a feature. GHSA-qhrr-8q5h-9q3h (CVE-2026-92707, medium, published
+         2026-10-15): MessagePack before 3.1.9 can allocate excessive memory deserializing nested
+         arrays. It reaches us only through Umbraco.Cms.Web.Common 17.7.1 (3.1.8), so the shipped
+         projects that resolve it reference the fix directly.
+         EXIT: remove this, and the references to it, when the Umbraco floor is raised to a release
+         whose own graph resolves MessagePack 3.1.9 or later (expected: 17.8.0). -->
+    <PackageVersion Include="MessagePack" Version="3.1.9" />
+
+    <!-- SECURITY PIN, not a feature. GHSA-g94r-2vxg-569j (medium, published 2026-04-23):
+         OpenTelemetry.Api before 1.15.3 over-allocates parsing propagation headers. It reaches us
+         only through Umbraco.Automate.Core 17.5.1 -> WorkflowCore 3.9.0 (1.1.0), so only the
+         Automate project references the fix. Same major, so WorkflowCore's 1.x usage is unaffected.
+         EXIT: remove this, and the reference to it, when the Automate floor is raised to a release
+         whose own graph resolves OpenTelemetry.Api 1.15.3 or later. -->
+    <PackageVersion Include="OpenTelemetry.Api" Version="1.15.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Testing. Nothing here ships. -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    A local Umbraco 17 site for development (from the Umbraco.Templates 17.7.0 `umbraco` template,
+    SQLite, unattended install). Never packed, never deployed.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <CompressionEnabled>false</CompressionEnabled> <!-- Backoffice files are precompressed by node; don't let dotnet compress them -->
+    <IsPackable>false</IsPackable>
+    <!-- Packing the solution is how the packages are built; this opt-out is deliberate -->
+    <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms" />
+    <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" />
+    <!-- The full Automate install (UI, storage), so the Automate integration can be exercised -->
+    <PackageReference Include="Umbraco.Automate" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Referenced the way a site installs them: the aggregate, plus the optional Automate package -->
+    <ProjectReference Include="..\NDD.Umbraco.ContentReview\NDD.Umbraco.ContentReview.csproj" />
+    <ProjectReference Include="..\NDD.Umbraco.ContentReview.Automate\NDD.Umbraco.ContentReview.Automate.csproj" />
+  </ItemGroup>
+
+  <!--
+    ACCEPTED ADVISORIES - SixLabors.ImageSharp 3.1.12, reached only through the full Umbraco.Cms
+    install. Each is fixed only in ImageSharp 4.1.2+, a major version no Umbraco 17 release depends
+    on. This project is never packed or deployed, and no shipped package depends on ImageSharp.
+    Suppressed HERE and nowhere else; remove when Umbraco moves to a fixed ImageSharp.
+  -->
+  <ItemGroup>
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-gwg2-r3hj-4w44" /> <!-- moderate: ICC CLUT allocation -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-wmxv-xphr-5c9g" /> <!-- moderate: BigTIFF IFD loop -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-j3p4-wp97-rph4" /> <!-- high: HistogramEqualization index -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-j9gm-c75j-xc9q" /> <!-- high: TIFF CCITT T4 encoder overrun -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-jjfr-hcj7-qf5w" /> <!-- high: TIFF CCITT T6 encoder overrun -->
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- App-local ICU for consistent globalization across platforms (as the Umbraco template does) -->
+    <UmbracoUseAppLocalIcu Condition="'$(UmbracoUseAppLocalIcu)' == '' and ($(RuntimeIdentifier.StartsWith('linux')) or $(RuntimeIdentifier.StartsWith('win')) or ('$(RuntimeIdentifier)' == '' and !$([MSBuild]::IsOSPlatform('osx'))))">true</UmbracoUseAppLocalIcu>
+    <UmbracoUseAppLocalIcu Condition="'$(UmbracoUseAppLocalIcu)' == ''">false</UmbracoUseAppLocalIcu>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(UmbracoUseAppLocalIcu)' == 'true'">
+    <PackageReference Include="Microsoft.ICU.ICU4C.Runtime" />
+    <!-- Keep in sync with Microsoft.ICU.ICU4C.Runtime in Directory.Packages.props -->
+    <RuntimeHostConfigurationOption Include="System.Globalization.AppLocalIcu" Value="72.1.0.3" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Razor files are needed for the backoffice to work correctly -->
+    <CopyRazorGenerateFilesToPublishDirectory>true</CopyRazorGenerateFilesToPublishDirectory>
+    <!-- Remove these when not using ModelsMode InMemoryAuto -->
+    <RazorCompileOnBuild>false</RazorCompileOnBuild>
+    <RazorCompileOnPublish>false</RazorCompileOnPublish>
+    <UserSecretsId>73895048-fae7-4ca3-9dc4-682f15be9ea5</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Keep the local appsettings override out of publish output -->
+    <Content Update="appsettings.Local.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+</Project>

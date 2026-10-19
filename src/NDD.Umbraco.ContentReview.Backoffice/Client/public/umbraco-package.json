@@ -1,0 +1,14 @@
+{
+  "id": "NDD.Umbraco.ContentReview",
+  "name": "Content Review",
+  "version": "0.0.0",
+  "allowTelemetry": true,
+  "extensions": [
+    {
+      "name": "Content Review Bundle",
+      "alias": "NDD.Umbraco.ContentReview.Bundle",
+      "type": "bundle",
+      "js": "/App_Plugins/NDDContentReview/ndd-content-review.js"
+    }
+  ]
+}

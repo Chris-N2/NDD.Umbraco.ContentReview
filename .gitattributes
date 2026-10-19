@@ -1,0 +1,15 @@
+# Normalise line endings for all text files across platforms
+* text=auto
+
+# Explicit LF for files where CRLF breaks tooling
+*.sh text eol=lf
+
+# Binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
